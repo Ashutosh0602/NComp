@@ -98,6 +98,6 @@ elif [ "$1" = "-l" ]; then
     # Call the function list_zip_files
     list_zip_files
 else
-    echo "Error: Irrelevant argument. Usage: $0 -c or $0 -l"
+    echo "Error: Irrelevant argument. Usage: ncomp -c or ncomp -l"
     exit 1
 fi
