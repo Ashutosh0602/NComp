@@ -87,17 +87,79 @@ archive_directory() {
 list_zip_files() {
     echo "Listing all zip files in the archive folder:"
     ls -l "$HOME/archive"/*.zip | awk '{print $NF}' | xargs -n 1 basename
-
 }
 
-# Check if the argument is -c
-if [ "$1" = "-c" ]; then
-    # Call the function archive_directory
-    archive_directory
-elif [ "$1" = "-l" ]; then
-    # Call the function list_zip_files
-    list_zip_files
-else
-    echo "Error: Irrelevant argument. Usage: $0 -c or $0 -l"
-    exit 1
-fi
+# Function to update the archive log file
+update_archive_log() {
+    if [ -z "$2" ]; then
+        echo "Error: Missing filename argument. Usage: $0 -u <filename>"
+        exit 1
+    fi
+
+    filename="$2"
+
+    # Define the path to the archive folder in the home directory
+    archive_folder="$HOME/archive"
+
+    # Define the path to the archive log file
+    archive_log_file="$archive_folder/archive.log"
+
+    # Check if the file exists in the archive folder
+    if [ -f "$archive_folder/$filename" ]; then
+        echo "File '$filename' exists in the archive folder."
+        
+        # Check if archive.log file exists
+        if [ ! -f "$archive_log_file" ]; then
+            echo "Error: archive.log file not found."
+            exit 1
+        fi
+
+        # Search for the filename in the archive log and extract the current directory path
+        current_dir_path=$(grep "$filename" "$archive_folder/archive.log" | awk -F '|' '{print $2}' | sed 's/Current directory path://')
+
+        if [ -z "$current_dir_path" ]; then
+            echo "Error: Current directory path not found for file '$filename' in archive.log."
+        else
+            echo "Current directory path for file '$filename': $current_dir_path"
+
+            # Unzip the file
+            unzip -q "$archive_folder/$filename" -d "$current_dir_path"
+
+            # Move the unzipped folder to its original directory
+            mv "$current_dir_path/${filename%.zip}" "$current_dir_path"
+
+            echo "Unzipped folder moved to its original directory: $current_dir_path"
+
+            # Remove the file entry from the archive log
+            sed -i "/$filename/d" "$archive_log_file"
+            echo "Entry for file '$filename' deleted from the archive log."
+
+            # # Remove the zip folder from the archive folder
+            rm "$archive_folder/$filename"
+            echo "Zip folder '$filename' deleted from the archive folder."
+        fi
+    else
+        echo "File '$filename' does not exist in the archive folder."
+    fi
+}
+
+
+# Check the argument passed
+case "$1" in
+    -c)
+        # Call the function archive_directory
+        archive_directory
+        ;;
+    -l)
+        # Call the function list_zip_files
+        list_zip_files
+        ;;
+    -u)
+        # Call the function update_archive_log with the second argument
+        update_archive_log "$@"
+        ;;
+    *)
+        echo "Error: Irrelevant argument. Usage: $0 -c or $0 -l or $0 -u <filename>"
+        exit 1
+        ;;
+esac
