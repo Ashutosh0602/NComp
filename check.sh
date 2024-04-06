@@ -115,7 +115,7 @@ update_archive_log() {
         fi
 
         # Search for the filename in the archive log and extract the current directory path
-        current_dir_path=$(grep "$filename" "$archive_folder/archive.log" | awk -F '|' '{print $2}' | sed 's/Current directory path://')
+        current_dir_path=$(grep "$filename" "$archive_log_file" | awk -F '|' '{print $2}' | sed 's/Current directory path://' | head -n 1 | tr -d '[:space:]')
 
         if [ -z "$current_dir_path" ]; then
             echo "Error: Current directory path not found for file '$filename' in archive.log."
@@ -125,24 +125,32 @@ update_archive_log() {
             # Unzip the file
             unzip -q "$archive_folder/$filename" -d "$current_dir_path"
 
-            # Move the unzipped folder to its original directory
-            mv "$current_dir_path/${filename%.zip}" "$current_dir_path"
+            if [ $? -eq 0 ]; then
+                echo "Unzipped folder moved to its original directory: $current_dir_path"
 
-            echo "Unzipped folder moved to its original directory: $current_dir_path"
+                # Remove the file entry from the archive log
+                sed -i -e "/$(sed 's/[\/&]/\\&/g' <<< "$filename")/d" "$archive_log_file"
+                if [ $? -eq 0 ]; then
+                    echo "Entry for file '$filename' deleted from the archive log."
 
-            # Remove the file entry from the archive log
-            sed -i "/$filename/d" "$archive_log_file"
-            echo "Entry for file '$filename' deleted from the archive log."
-
-            # # Remove the zip folder from the archive folder
-            rm "$archive_folder/$filename"
-            echo "Zip folder '$filename' deleted from the archive folder."
+                    # Remove the zip folder from the archive folder
+                    rm "$archive_folder/$filename"
+                    if [ $? -eq 0 ]; then
+                        echo "Zip folder '$filename' deleted from the archive folder."
+                    else
+                        echo "Error: Failed to delete zip folder '$filename' from the archive folder."
+                    fi
+                else
+                    echo "Error: Failed to delete entry for file '$filename' from the archive log."
+                fi
+            else
+                echo "Error: Failed to unzip the file '$filename' to the directory '$current_dir_path'."
+            fi
         fi
     else
         echo "File '$filename' does not exist in the archive folder."
     fi
 }
-
 
 # Check the argument passed
 case "$1" in
