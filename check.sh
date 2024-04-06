@@ -128,6 +128,20 @@ update_archive_log() {
             if [ $? -eq 0 ]; then
                 echo "Unzipped folder moved to its original directory: $current_dir_path"
 
+                # Change directory to the unzipped folder
+                cd "$current_dir_path"
+                
+                # Check if package.json exists
+                if [ -f "package.json" ]; then
+                    # Install node modules
+                    npm install
+                else
+                    echo "Error: package.json not found in the unzipped folder."
+                fi
+
+                # Move back to the original directory
+                cd "$OLDPWD"
+
                 # Remove the file entry from the archive log
                 sed -i -e "/$(sed 's/[\/&]/\\&/g' <<< "$filename")/d" "$archive_log_file"
                 if [ $? -eq 0 ]; then
