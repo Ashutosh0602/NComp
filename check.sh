@@ -2,6 +2,8 @@
 
 # Function to archive a directory
 archive_directory() {
+    # source /Users/ashutoshrai/shell/projects/find_node/ascii.sh
+
     # Clear the terminal
     clear
 
@@ -92,6 +94,8 @@ archive_directory() {
 
 # Function to list all zip files in the archive folder
 list_zip_files() {
+    # source /Users/ashutoshrai/shell/projects/find_node/ascii.sh
+    
     echo -e "\033[36mListing all zip files in the archive folder:\033[0m"
     ls -l "$HOME/archive"/*.zip | awk '{print $NF}' | xargs -n 1 basename
 }
@@ -100,6 +104,8 @@ list_zip_files() {
 
 # Function to update the archive log file
 update_archive_log() {
+    # source /Users/ashutoshrai/shell/projects/find_node/ascii.sh
+
     if [ -z "$2" ]; then
         echo -e "\033[31mError: Missing filename argument. Usage: $0 -u \033[31;47m<filename>\033[0m"
         exit 1
@@ -183,6 +189,57 @@ update_archive_log() {
     fi
 }
 
+# Function to execute any command to initiate a Node project
+initiate_node_project() {
+
+    # Ensure cron.log exists in the Archive folder
+    cron_log="$HOME/archive/cron.log"
+    if [ ! -f "$cron_log" ]; then
+        touch "$cron_log"
+        echo -e "\033[32mCreated cron.log in the Archive folder.\033[0m"
+    fi
+
+    # Get the current folder name and path before any changes
+    current_folder=$(basename "$(pwd)")
+    current_path="$(pwd)"
+    
+    # Capture the initial state of the current directory
+    initial_state=$(ls -1)
+
+    read -p $'\033[36mEnter the Node project initiation command:\033[0m ' command
+    echo -e "\033[32mExecuting command: $command...\033[0m"
+    eval "$command"
+
+    final_state=$(ls -1)
+    new_files=$(diff <(echo "$initial_state") <(echo "$final_state") | grep ">" | awk '{print $2}')
+
+     if [[ -n "$new_files" ]]; then
+        echo -e "\033[34mNew files/folders created:\033[0m"
+        echo "$new_files" | while IFS= read -r item; do
+            if [ -f "$item" ]; then  
+                if [ "$item" == "package.json" ]; then  
+                    echo -e "\033[32m'$item' created in $current_folder ($current_path).\033[0m"
+                    echo "$current_folder : $current_path" >> "$cron_log"  
+                else
+                    echo "- $item"
+                fi
+            elif [ -d "$item" ]; then  
+                if [ -f "$item/package.json" ]; then  
+                    folder_path="$(pwd)/$item"
+                    echo "- $item : ($folder_path)"
+                    echo "$item : $folder_path" >> "$cron_log"  
+                else
+                    echo "- $item (Folder)"
+                fi
+            else
+                echo "- $item (Unknown type)"
+            fi
+        done
+    else
+        echo -e "\033[31mNo new files or folders created.\033[0m"
+    fi
+}
+
 # Check the argument passed
 case "$1" in
     -c)
@@ -197,8 +254,12 @@ case "$1" in
         # Call the function update_archive_log with the second argument
         update_archive_log "$@"
         ;;
+    -i)
+        # Call the function to execute any command to initiate a Node project
+        initiate_node_project
+        ;;
     *)
-        echo "Error: Irrelevant argument. Usage: $0 -c or $0 -l or $0 -u <filename>"
+        echo "Error: Irrelevant argument. Usage: ncomp -c or ncomp -l or ncomp -u <filename> or ncomp -i"
         exit 1
         ;;
 esac
