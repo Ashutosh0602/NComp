@@ -16,7 +16,7 @@ This project is a shell script designed to compress entire Node.js projects effi
 
 #### Compression
 
-To compress a Node.js project directory, execute the following command:
+To compress a Node.js project directory, execute the following command in the directory which has to be compressed:
 
 ```bash
 ncomp -c
@@ -58,10 +58,10 @@ git clone https://github.com/your_username/NComp.git
 cd NComp
 ```
 
-3. Make sure all script files (`compress.sh`, `list.sh`, `decompress.sh`) are executable:
+3. Make sure all script files (`main.sh`) are executable:
 
 ```bash
-chmod +x main.sh compress.sh list.sh decompress.sh
+make setup
 ```
 
 ### Contribution
