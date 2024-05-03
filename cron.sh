@@ -37,7 +37,7 @@ while IFS= read -r line; do
             echo "Directory: $directory_path"
             echo "Minutes since last access: $minutes"
 
-            if [[ $minutes -gt 200 ]]; then
+            if [[ $minutes -gt 43200 ]]; then
                 echo "Running ncomp -c in $directory_path"
                 cd "$directory_path" || continue
                 ncomp -c
