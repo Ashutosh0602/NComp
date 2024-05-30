@@ -49,7 +49,7 @@ ncomp -u <filename>
 1. Clone this repository:
 
 ```bash
-git clone https://github.com/your_username/NComp.git
+git clone https://github.com/Ashutosh0602/NComp.git
 ```
 
 2. Navigate to the cloned directory:
